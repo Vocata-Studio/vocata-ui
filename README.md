@@ -4,21 +4,19 @@ A Claude Code skill that generates 4 visually distinct UI component variations, 
 
 ## Install
 
-Add to your Claude Code settings (`~/.claude/settings.json`):
-
-```json
-{
-  "skills": [
-    "/path/to/vocata-ui/SKILL.md"
-  ]
-}
-```
-
-Or symlink into your skills directory:
+One-liner:
 
 ```bash
-ln -s /path/to/vocata-ui/SKILL.md ~/.claude/skills/vocata-ui.md
+curl -fsSL https://raw.githubusercontent.com/vocata/vocata-ui/main/install.sh | bash
 ```
+
+Or manually:
+
+```bash
+git clone https://github.com/Vocata-Studio/vocata-ui.git ~/.claude/skills/vocata-ui
+```
+
+Start a new Claude Code session after installing.
 
 ## Usage
 
