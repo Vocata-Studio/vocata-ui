@@ -1,6 +1,6 @@
 # Vocata UI
 
-A Claude Code skill that generates 4 visually distinct UI component variations, previews them in the browser with a switching toolbar, and writes the chosen variation as clean production code.
+A Claude Code skill that generates visually distinct UI component variations, previews them in the browser with a switching toolbar, and writes the chosen variation as clean production code.
 
 ## Install
 
@@ -37,7 +37,7 @@ Add a team section to the about page, use vocata ui
 ## How it works
 
 1. **Analyzes your project** — detects framework (Next.js, Astro), styling (Tailwind, CSS Modules), and reads your existing design language
-2. **Generates 4 variations** — each with a different layout strategy and visual approach, stored in `.vocata/variations/`
+2. **Generates multiple variations** — each with a different layout strategy and visual approach, stored in `.vocata/variations/`
 3. **Sets up preview** — modifies the target page temporarily with a toolbar to switch between variations (keyboard shortcuts 1-4)
 4. **You pick** — tell Claude Code which variation to keep, iterate on, or regenerate
 5. **Cleans up** — writes the chosen variation as a normal component, removes all `.vocata/` artifacts
