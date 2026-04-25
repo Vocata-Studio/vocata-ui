@@ -4,20 +4,22 @@
  * This script is inlined into Astro preview pages.
  * For React/Next.js, the toolbar is a React component (see SKILL.md).
  *
- * Usage: All 4 variations must be wrapped in elements with
- * data-vocata-variation="1" through data-vocata-variation="4".
- * Only variation 1 is visible by default.
+ * Usage: Variations must be wrapped in elements with
+ * data-vocata-variation="1" through data-vocata-variation="N".
+ * Only variation 1 is visible by default. The toolbar detects N
+ * automatically from the number of data-vocata-variation elements.
  */
 (function () {
   "use strict";
 
   let active = 1;
+  let count = 0;
 
   function switchVariation(n) {
-    if (n < 1 || n > 4) return;
+    if (n < 1 || n > count) return;
     active = n;
 
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= count; i++) {
       const el = document.querySelector(`[data-vocata-variation="${i}"]`);
       if (el) {
         el.style.display = i === active ? "" : "none";
@@ -75,8 +77,8 @@
     label.textContent = "Vocata UI";
     bar.appendChild(label);
 
-    // Buttons
-    for (let i = 1; i <= 4; i++) {
+    // Buttons — one per detected variation
+    for (let i = 1; i <= count; i++) {
       const btn = document.createElement("button");
       btn.setAttribute("data-vocata-btn", String(i));
       btn.textContent = String(i);
@@ -109,7 +111,7 @@
       color: "rgba(255, 255, 255, 0.3)",
       fontSize: "11px",
     });
-    hint.textContent = "Press 1\u20134 to switch";
+    hint.textContent = "Press 1–" + count + " to switch";
     bar.appendChild(hint);
 
     document.body.appendChild(bar);
@@ -119,6 +121,7 @@
   }
 
   function init() {
+    count = document.querySelectorAll("[data-vocata-variation]").length;
     createToolbar();
 
     // Keyboard support
@@ -132,7 +135,7 @@
         return;
       }
       const n = parseInt(e.key, 10);
-      if (n >= 1 && n <= 4) {
+      if (n >= 1 && n <= count) {
         switchVariation(n);
       }
     });
