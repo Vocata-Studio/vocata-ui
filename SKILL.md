@@ -1,6 +1,6 @@
 ---
 name: vocata-ui
-description: Generate 4 visually distinct UI component variations for in-browser preview and selection. Use when the user asks to create a component "with vocata ui", "show me variations", "try different layouts", or wants to compare UI options before committing to one.
+description: Generate 2, 3, or 4 visually distinct UI component variations for in-browser preview and selection. Use when the user asks to create a component "with vocata ui", "show me variations", "try different layouts", or wants to compare UI options before committing to one.
 ---
 
 # Vocata UI
@@ -61,6 +61,7 @@ From the user's request, determine:
 - **Target page file**: The file to modify (e.g., `src/app/page.tsx`, `src/pages/index.astro`)
 - **Insertion point**: Where in the page the component goes (e.g., "after the Hero component", "below the fold")
 - **Component name**: What to call it (e.g., `Testimonials`, `PricingTable`)
+- **Variation count**: How many variations to generate — **2, 3, or 4 only**. If the user's request includes a number (e.g., "show me 3 variations", "2 options"), use it. If not specified, use **4** as the default. Do not accept any other number.
 
 If the insertion point is ambiguous, ask the user to clarify before proceeding.
 
@@ -77,6 +78,7 @@ Create `.vocata/context.json`:
   "insertionPoint": "after Hero component",
   "componentName": "Testimonials",
   "fileExtension": ".tsx | .astro | .html",
+  "variationCount": 4,
   "designTokens": {
     "colors": [],
     "fonts": [],
@@ -92,11 +94,11 @@ Add `.vocata` to `.gitignore` if not already present.
 
 ## Phase 2: Generation
 
-Generate 4 visually distinct variations. Read `reference/variation-strategies.md` from the skill directory for the variation taxonomy.
+Read `variationCount` from `.vocata/context.json` (2, 3, or 4). Generate that many visually distinct variations. Read `reference/variation-strategies.md` from the skill directory for the variation taxonomy.
 
 ### 2.1 Plan Variations
 
-Before writing any code, plan 4 variations that maximize visual contrast:
+Before writing any code, plan `variationCount` variations that maximize visual contrast:
 
 - Each variation MUST use a **different layout strategy** (e.g., grid, stack, carousel, asymmetric)
 - Each variation MUST use a **different compositional approach** (e.g., card-based, editorial, minimal, interactive)
@@ -112,16 +114,15 @@ If the component needs data (testimonials, pricing plans, team members, etc.):
 
 1. Create `.vocata/variations/types.ts` with the TypeScript interface
 2. Create `.vocata/variations/mock-data.ts` with realistic mock data
-3. All 4 variations import from these shared files
+3. All `variationCount` variations import from these shared files
 
 ### 2.3 Generate Variations
 
-Write each variation as a self-contained component:
+Write each variation as a self-contained component, one file per variation from 1 to `variationCount`:
 
 - `.vocata/variations/variation-1.tsx` (or `.astro`)
 - `.vocata/variations/variation-2.tsx`
-- `.vocata/variations/variation-3.tsx`
-- `.vocata/variations/variation-4.tsx`
+- … through `.vocata/variations/variation-{variationCount}.tsx`
 
 Each variation file:
 - Is a complete, working component
@@ -158,23 +159,28 @@ Create `.vocata/VocataPreview.tsx` (or `.astro`) that:
 
 #### For Next.js (React):
 
+Generate this file with imports and the `variations` array sized to `variationCount` (2, 3, or 4). Example for `variationCount = 3` — adjust imports and array for the actual count:
+
 ```tsx
 "use client";
 import { useState, useEffect } from "react";
 import Variation1 from "./variations/variation-1";
 import Variation2 from "./variations/variation-2";
 import Variation3 from "./variations/variation-3";
-import Variation4 from "./variations/variation-4";
+// Add one import per variation up to variationCount
 
-const variations = [Variation1, Variation2, Variation3, Variation4];
+const variations = [Variation1, Variation2, Variation3];
+// Include all variation components up to variationCount
+const variationCount = variations.length;
 
 export default function VocataPreview() {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key >= "1" && e.key <= "4") {
-        setActive(parseInt(e.key) - 1);
+      const n = parseInt(e.key, 10);
+      if (n >= 1 && n <= variationCount) {
+        setActive(n - 1);
       }
     };
     window.addEventListener("keydown", handleKey);
@@ -186,12 +192,12 @@ export default function VocataPreview() {
   return (
     <>
       <ActiveVariation />
-      <VocataToolbar active={active} onSelect={setActive} />
+      <VocataToolbar active={active} onSelect={setActive} count={variationCount} />
     </>
   );
 }
 
-function VocataToolbar({ active, onSelect }: { active: number; onSelect: (n: number) => void }) {
+function VocataToolbar({ active, onSelect, count }: { active: number; onSelect: (n: number) => void; count: number }) {
   return (
     <div style={{
       position: "fixed",
@@ -214,7 +220,7 @@ function VocataToolbar({ active, onSelect }: { active: number; onSelect: (n: num
       <span style={{ marginRight: "12px", fontWeight: 600, color: "rgba(255, 255, 255, 0.4)", letterSpacing: "0.05em", textTransform: "uppercase", fontSize: "11px" }}>
         Vocata UI
       </span>
-      {[1, 2, 3, 4].map((n) => (
+      {Array.from({ length: count }, (_, i) => i + 1).map((n) => (
         <button
           key={n}
           onClick={() => onSelect(n - 1)}
@@ -235,7 +241,7 @@ function VocataToolbar({ active, onSelect }: { active: number; onSelect: (n: num
         </button>
       ))}
       <span style={{ marginLeft: "12px", color: "rgba(255, 255, 255, 0.3)", fontSize: "11px" }}>
-        Press 1-4 to switch
+        Press 1–{count} to switch
       </span>
     </div>
   );
@@ -244,16 +250,16 @@ function VocataToolbar({ active, onSelect }: { active: number; onSelect: (n: num
 
 #### For Astro:
 
-Create a `.vocata/VocataPreview.astro` that renders all 4 variations inside `<div>` containers with `data-vocata-variation="N"` attributes, showing only variation 1 by default. Include the toolbar as an inline `<script>` tag. Read the toolbar script from the skill's `assets/toolbar.js` and inline it.
+Create a `.vocata/VocataPreview.astro` that renders all `variationCount` variations inside `<div>` containers with `data-vocata-variation="N"` attributes, showing only variation 1 by default. Include the toolbar as an inline `<script>` tag. Read the toolbar script from the skill's `assets/toolbar.js` and inline it.
 
-For Astro, since components render server-side, ALL 4 variations are rendered in the HTML but only one is visible. The client-side toolbar script toggles visibility:
+For Astro, since components render server-side, ALL variations are rendered in the HTML but only one is visible. The client-side toolbar script detects the count from the DOM and toggles visibility. Generate imports and `<div>` containers for each variation 1 through `variationCount`. Example for `variationCount = 3`:
 
 ```astro
 ---
 import Variation1 from "./variations/variation-1.astro";
 import Variation2 from "./variations/variation-2.astro";
 import Variation3 from "./variations/variation-3.astro";
-import Variation4 from "./variations/variation-4.astro";
+// Add one import per variation up to variationCount
 ---
 
 <div id="vocata-preview">
@@ -266,9 +272,7 @@ import Variation4 from "./variations/variation-4.astro";
   <div data-vocata-variation="3" style="display:none">
     <Variation3 />
   </div>
-  <div data-vocata-variation="4" style="display:none">
-    <Variation4 />
-  </div>
+  <!-- Repeat for each variation up to variationCount -->
 </div>
 
 <script>
@@ -291,15 +295,15 @@ For the toolbar not to obscure content, add temporary bottom padding. In React, 
 After setup is complete, tell the user:
 
 ```
-Variations ready! I've set up 4 different [component name] variations.
+Variations ready! I've set up {variationCount} different [component name] variations.
 
 Open your dev server and navigate to [page URL]. Use the toolbar at the bottom
-to switch between variations, or press 1-4 on your keyboard.
+to switch between variations, or press 1–{variationCount} on your keyboard.
 
 When you've decided:
 - "use variation 2" — I'll write it as clean code
 - "iterate on 3" — I'll refine that variation
-- "try 4 new ones" — I'll generate fresh variations
+- "try {variationCount} new ones" — I'll generate fresh variations
 - "make 2 more bold" — I'll adjust a specific variation
 ```
 
